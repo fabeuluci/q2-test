@@ -1,0 +1,10 @@
+.git
+node_modules
+src
+test
+types
+.gitignore
+.npmignore
+.npmrc
+package-lock.json
+tsconfig.json
