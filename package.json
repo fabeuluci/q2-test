@@ -1,6 +1,6 @@
 {
   "name": "q2-test",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Minimalistic testing tool",
   "license": "MIT",
   "author": {
@@ -8,10 +8,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/fabeuluci/q-test.git"
+    "url": "https://github.com/fabeuluci/q2-test.git"
   },
   "main": "out/tester.js",
-  "bin": "./bin/q-test.js",
+  "bin": "./bin/q2-test.js",
   "scripts": {
     "compile": "rm -rf out && tsc",
     "watch": "rm -rf out && tsc -w",
