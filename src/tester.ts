@@ -1,5 +1,6 @@
 import * as fs from "fs";
 import * as path from "path";
+import * as assert from "assert";
 
 let currentSuite: string;
 let passed = 0;
@@ -17,20 +18,19 @@ async function it(testName: string, func: () => unknown) {
     execute(currentSuite, testName, func, []);
 }
 
-async function execute(suiteName: string, testName: string, func: Function, args: unknown[]) {
-    try {
-        const res = func.apply(null, args);
-        if (res && typeof((<PromiseLike<unknown>>res).then) == "function") {
-            promises.push(res);
-            await res;
+function execute(suiteName: string, testName: string, func: Function, args: unknown[]) {
+    promises.push((async () => {
+        try {
+            await new Promise(resolve => setTimeout(resolve, 1));
+            await func.apply(null, args);
+            passed++;
+            console.log("  \x1b[32mSuccess\x1b[0m" + (suiteName ? " " + suiteName : ""), testName);
         }
-        passed++;
-        console.log("  \x1b[32mSuccess\x1b[0m" + (suiteName ? " " + suiteName : ""), testName);
-    }
-    catch (e) {
-        failed++;
-        console.log("  \x1b[31mFail\x1b[0m" + (suiteName ? " " + suiteName : ""), testName, e);
-    }
+        catch (e) {
+            failed++;
+            console.log("  \x1b[31mFail\x1b[0m" + (suiteName ? " " + suiteName : ""), testName, e);
+        }
+    })());
 }
 
 function each<T>(samples: T[]): {it(format: string, func: (sample: T) => unknown): void;} {
@@ -89,9 +89,97 @@ function executeInPath(filePath: string, logPath: boolean) {
     }
 }
 
+function mockFn(fn: Function) {
+    const newFn = function(this: any) {
+        newFn.mock.calls.push(arguments);
+        return fn.apply(this, arguments);
+    };
+    newFn.mock = {calls: [] as IArguments[]};
+    return newFn;
+}
+
+function equal(a: any, b: any) {
+    if (typeof(a) === "object" && typeof(b) === "object") {
+        if (a === null || b === null) {
+            if (a !== b) {
+                return false;
+            }
+            return true;
+        }
+        if (Array.isArray(a) || Array.isArray(b)) {
+            if (!Array.isArray(a) || !Array.isArray(b)) {
+                return false;
+            }
+            if (a.length !== b.length) {
+                return false;
+            }
+            for (let i = 0; i < a.length; i++) {
+                if (!equal(a[i], b[i])) {
+                    return false;
+                }
+            }
+            return true;
+        }
+        for (const key in a) {
+            if (!equal(a[key], b[key])) {
+                return false;
+            }
+        }
+        for (const key in b) {
+            if (!equal(a[key], b[key])) {
+                return false;
+            }
+        }
+        return true;
+    }
+    if (a !== b) {
+        return false;
+    }
+    return true;
+}
+
+function expect(value: any) {
+    return {
+        toBe: (newValue: any) => {
+            assert(value === newValue);
+        },
+        toEqual: (newValue: any) => {
+            assert(equal(value, newValue));
+        },
+        toBeTruthy: () => {
+            assert(!!value);
+        },
+        toBeNull: () => {
+            assert(value === null);
+        },
+        toContain: (str: any) => {
+            assert(value.includes(str));
+        },
+        not: {
+            toBe: (newValue: any) => {
+                assert(value !== newValue);
+            },
+            toEqual: (newValue: any) => {
+                assert(!equal(value, newValue));
+            },
+            toBeTruthy: () => {
+                assert(!value);
+            },
+            toBeNull: () => {
+                assert(value !== null);
+            },
+            toContain: (str: any) => {
+                assert(!value.includes(str));
+            },
+        }
+    };
+}
+
 (<any>global).describe = describe;
 (<any>global).it = it;
 (<any>global).each = each;
+(<any>global).mockFn = mockFn;
+(<any>global).expect = expect;
 
 async function go() {
     console.log("TESTING");
