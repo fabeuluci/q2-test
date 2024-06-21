@@ -4,7 +4,7 @@ describe("Test each", () => {
     each([
         [1, 2],
         [4, 5]
-    ], "value %s is lower than %s", (a, b) => {
+    ]).it("value %s is lower than %s", ([a, b]) => {
         assert(a < b);
     });
 });
