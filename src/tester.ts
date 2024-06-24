@@ -149,11 +149,22 @@ function expect(value: any) {
         toBeTruthy: () => {
             assert(!!value);
         },
+        toBeFalsy: () => {
+            assert(!value);
+        },
         toBeNull: () => {
             assert(value === null);
         },
         toContain: (str: any) => {
             assert(value.includes(str));
+        },
+        toBeInstanceOf: (clazz: any) => {
+            assert(value instanceof clazz);
+        },
+        objectContaining: (props: Record<string, any>) => {
+            for (const key in props) {
+                assert(value && equal(value[key], props[key]));
+            }
         },
         not: {
             toBe: (newValue: any) => {
@@ -165,11 +176,22 @@ function expect(value: any) {
             toBeTruthy: () => {
                 assert(!value);
             },
+            toBeFalsy: () => {
+                assert(!!value);
+            },
             toBeNull: () => {
                 assert(value !== null);
             },
             toContain: (str: any) => {
                 assert(!value.includes(str));
+            },
+            toBeInstanceOf: (clazz: any) => {
+                assert(!(value instanceof clazz));
+            },
+            objectContaining: (props: Record<string, any>) => {
+                for (const key in props) {
+                    assert(value && !equal(value[key], props[key]));
+                }
             },
         }
     };
